@@ -30,11 +30,18 @@ Tensor<float, batch_size, output_features> log_softmax(const Tensor<float, batch
 }
 
 template<size_type batch_size, size_type output_features>
-Tensor<float, batch_size, output_features> nll_loss_gradient(
-  const Tensor<float, batch_size, output_features>& input,
-  const Tensor<float, output_features, batch_size>& one_hot_labels
-){
-  return -transpose(one_hot_labels) + transpose(exp(logsoftmax(input)));
+Tensor<float, batch_size, output_features> logsoftmax_gradient(const Tensor<float, batch_size, output_features> &input, const Tensor<float, batch_size, output_features> &grad_output){
+  Tensor<float, batch_size, output_features> output;
+  for(auto i = 0; i < batch_size; i++){
+    auto max_value = max(input(i,all));
+    auto shifted_values = input(i,all) - max_value;
+    auto exp_shifted_values = exp(shifted_values);
+    auto sum_exp_shifted_values = sum(exp_shifted_values);
+    auto softmax_output = exp_shifted_values / sum_exp_shifted_values;
+  
+    output(i,all) = grad_output(i,all) - matmul(grad_output(i,all), softmax_output);
+  }
+  return output;
 }
 
 // Softmax activation function and its gradient

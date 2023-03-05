@@ -1,6 +1,10 @@
 #ifndef LAYERS_H
 #define LAYERS_H
 
+#include <iostream>
+#include <random>
+
+
 #include "tensor_algebra.h"
 #include "activation_functions.h"
 
@@ -9,15 +13,15 @@ struct Parameters{
   Tensor<float, input_features, output_features> weight;
   Tensor<float, output_features> bias;
   
-  void initialize(std::string initializer){
+  void initialize(const std::string& initializer){
     std::random_device rd;
     std::mt19937 generator(rd());
-
+    std::normal_distribution<float> distribution;
     if(initializer == "he"){
-      std::normal_distribution<float> distribution(0, std::sqrt(2.0 / input_features));
+      distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features));
     }
     else if(initializer == "xavier"){
-      std::normal_distribution<float> distribution(0, std::sqrt(2.0 / input_features + output_features));
+      distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features + output_features));
     }
     else{
       std::cout << "Initializer not implemented" << std::endl;
@@ -38,8 +42,8 @@ template<size_type input_features, size_type output_features>
 class Linear{
   public:
 
-    Linear(){
-      parameters.initialize(std::string initializer = "he");
+    Linear(const std::string& initializer = "he"){
+      parameters.initialize(initializer);
     }
 
     //forward method
@@ -73,18 +77,16 @@ class Linear{
 };
 
 //ReLU layer class
-
-template<size_type input_features, size_type output_features>
 class ReLU{
   public:
     //forward method
-    template<size_type batch_size>
-    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, input_features> &input){
+    template<size_type batch_size, size_type output_features>
+    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, output_features> &input){
       return relu(input);
     }
   
     //backward method
-    template<size_type batch_size>
+    template<size_type batch_size, size_type input_features ,size_type output_features>
     Tensor<float, batch_size, input_features> backward(
       const Tensor<float, batch_size, output_features> &gradient,
       const Tensor<float, batch_size, input_features>& input
@@ -93,17 +95,16 @@ class ReLU{
     }
 };
 
-template<size_type input_features, size_type output_features>
 class LogSoftMax{
   public:
     //forward method
-    template<size_type batch_size>
-    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, input_features> &input){
+    template<size_type batch_size, size_type output_features>
+    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, output_features> &input){
       return log_softmax(input);
     }
   
     //backward method
-    template<size_type batch_size>
+    template<size_type batch_size, size_type input_features ,size_type output_features>
     Tensor<float, batch_size, input_features> backward(
       const Tensor<float, batch_size, output_features> &gradient,
       const Tensor<float, batch_size, input_features>& input

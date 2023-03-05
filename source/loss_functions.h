@@ -1,6 +1,7 @@
 #ifndef LOSS_FUNCTIONS_H
 #define LOSS_FUNCTIONS_H
 
+
 template<size_type output_features, size_type batch_size>
 Tensor<float, output_features, batch_size> one_hot_encoding(const std::vector<int> labels){
   Tensor<float, output_features, batch_size> one_hot_labels(0);
