@@ -13,6 +13,7 @@ int main(){
 
   Linear<784,256> linear1("he");
   ReLU relu1;
+  
   Linear<256,10> linear2("xavier");
   LogSoftMax logsoftmax;
 
