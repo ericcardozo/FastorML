@@ -51,4 +51,22 @@ Tensor<float, batch_size, output_features> softmax(const Tensor<float, batch_siz
   return exp(log_softmax(input));
 }
 
+template<size_type batch_size, size_type output_features>
+Tensor<float, batch_size, output_features> softmax_gradient(const Tensor<float, batch_size, output_features> &input, const Tensor<float, batch_size, output_features> &grad_output){
+  Tensor<float, batch_size, output_features> output;
+  for(auto i = 0; i < batch_size; i++){
+    auto max_value = max(input(i,all));
+    auto shifted_values = input(i,all) - max_value;
+    auto exp_shifted_values = exp(shifted_values);
+    auto sum_exp_shifted_values = sum(exp_shifted_values);
+    auto softmax_output = exp_shifted_values / sum_exp_shifted_values;
+
+    auto jacobian = diag(softmax_output) - outer(softmax_output, softmax_output);
+    output(i,all) = matmul(grad_output(i,all), jacobian);
+  }
+  return output;
+}
+
+
+
 #endif

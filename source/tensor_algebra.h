@@ -11,4 +11,5 @@
   using Fastor::all;
   using Fastor::transpose;
   using Fastor::trace;
+  using Fastor::diag;
 #endif

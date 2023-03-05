@@ -11,8 +11,10 @@
 template<size_type input_features, size_type output_features>
 struct Parameters{
   Tensor<float, input_features, output_features> weight;
+  Tensor<float, input_features, output_features> weight_gradient;
   Tensor<float, output_features> bias;
-  
+  Tensor<float, output_features> bias_gradient;
+
   void initialize(const std::string& initializer){
     std::random_device rd;
     std::mt19937 generator(rd());
@@ -59,16 +61,16 @@ class Linear{
       const Tensor<float, batch_size, output_features> &gradient,
       const Tensor<float, batch_size, input_features>& input
     ){
-      Tensor<float, input_features, output_features> weight_gradient = matmul(transpose(input), gradient);
-      Tensor<float, output_features> bias_gradient(0.0); // Initialize bias_gradient with zeros
+      parameters.weight_gradient = matmul(transpose(input), gradient);
+      parameters.bias_gradient = 0.0; // Initialize bias_gradient with zeros
 
       for (size_t i = 0; i < batch_size; i++) {
         for (size_t j = 0; j < output_features; j++){
-        bias_gradient(j) += gradient(i, j);
+        parameters.bias_gradient(j) += gradient(i, j);
         }
       }
 
-      Tensor<float, batch_size, input_features> input_gradient = matmul(gradient, parameters.weight);
+      Tensor<float, batch_size, input_features> input_gradient = matmul(gradient, transpose(parameters.weight));
       return input_gradient;
     }
   
@@ -76,42 +78,64 @@ class Linear{
     Parameters<input_features, output_features> parameters;
 };
 
-//ReLU layer class
+//ReLU layer 
+template<size_type batch_size, size_type output_features>
 class ReLU{
   public:
     //forward method
-    template<size_type batch_size, size_type output_features>
-    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, output_features> &input){
-      return relu(input);
+    Tensor<float, batch_size, output_features> forward(
+      const Tensor<float, batch_size, output_features> &input
+    ){
+      input_ = input;
+      output_ = relu(input);
+      return output_;
     }
   
     //backward method
-    template<size_type batch_size, size_type input_features ,size_type output_features>
+    template<size_type input_features>
     Tensor<float, batch_size, input_features> backward(
       const Tensor<float, batch_size, output_features> &gradient,
       const Tensor<float, batch_size, input_features>& input
     ){
       return gradient * relu_gradient(input);
     }
+
+    Tensor<float, batch_size, output_features> input() const {return input_;};
+    Tensor<float, batch_size, output_features> output() const {return output_;};
+
+  private:
+    Tensor<float, batch_size, output_features> input_;
+    Tensor<float, batch_size, output_features> output_;    
 };
 
+
+template<size_type batch_size, size_type output_features>
 class LogSoftMax{
   public:
     //forward method
-    template<size_type batch_size, size_type output_features>
-    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, output_features> &input){
-      return log_softmax(input);
+    Tensor<float, batch_size, output_features> forward(
+      const Tensor<float, batch_size, output_features> &input
+    ){
+      input_ = input;
+      output_ = log_softmax(input); 
+      return output_;
     }
   
     //backward method
-    template<size_type batch_size, size_type input_features ,size_type output_features>
+    template<size_type input_features>
     Tensor<float, batch_size, input_features> backward(
       const Tensor<float, batch_size, output_features> &gradient,
       const Tensor<float, batch_size, input_features>& input
     ){
-      return logsoftmax_gradient(input) * gradient;
+      return log_softmax_gradient(input) * gradient;
     }
-};
+  
+    Tensor<float, batch_size, output_features> input() const {return input_;};
+    Tensor<float, batch_size, output_features> output() const {return output_;};
 
+  private:
+    Tensor<float, batch_size, output_features> input_;
+    Tensor<float, batch_size, output_features> output_;    
+};
 
 #endif
