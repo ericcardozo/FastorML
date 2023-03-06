@@ -51,6 +51,6 @@ class NLLLoss{
     ){
       return nll_loss_gradient(input, one_hot_labels) * gradient;
     }
-};z
+};
 
 #endif

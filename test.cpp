@@ -3,14 +3,18 @@ using size_type = std::size_t;
 #include<random>
 #include<vector>
 
+#include "data/data_reader.h"
+#include "source/tensor_algebra.h"
+#include "source/dataset.h"
 #include "source/layers.h"
 #include "source/loss_functions.h"
 
 
 int main(){
-  std::vector<int> labels = {1, 2, 3, 4, 5, 6, 7, 8,
-  9, 0, 5, 6, 7, 8, 9, 5, 6, 7, 8, 9, 5, 6,
-  7, 8, 9, 5, 6, 7, 8, 9, 5 ,4};
+  auto data = read("/data/mnist_train.csv");
+  Dataset<32, 784> dataset(data);
+  
+  std::vector<int> labels = {1,5,4,9,7,2,1,5,4,9,7,2,1,5,4,9,7,2,1,5,4,9,7,2,1,5,4,9,7,2,1,5,4,9,7,2,1,2};
 
   Tensor<float, 32, 784> input(0);
   input.random();
