@@ -39,10 +39,14 @@ class Dataset{
         dataset_.emplace_back(std::move(batch));
       }
       if(shuffle){
-        std::random_device rd;
-        std::mt19937 generator(rd());
-        std::shuffle(dataset_.begin(), dataset_.end(), generator);
+        shuffle();
       }
+    }
+
+    void shuffle(){
+      std::random_device rd;
+      std::mt19937 generator(rd());
+      std::shuffle(dataset_.begin(), dataset_.end(), generator);
     }
 
   private:

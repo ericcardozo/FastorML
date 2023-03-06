@@ -2,10 +2,10 @@
 #define LOSS_FUNCTIONS_H
 
 template<size_type output_features, size_type batch_size>
-Tensor<float, output_features, batch_size> one_hot_encoding(const std::vector<int> labels){
-  Tensor<float, output_features, batch_size> one_hot_labels(0);
+Tensor<float, output_features, batch_size> one_hot_encoding(const std::vector<int> targets){
+  Tensor<float, output_features, batch_size> one_hot_targets(0);
   for(auto i = 0; i < batch_size; i++){
-    one_hot_labels(labels[i], i) = 1;
+    one_hot_labels(targets[i], i) = 1;
   }
   return one_hot_labels;
 }
@@ -15,18 +15,18 @@ Tensor<float, output_features, batch_size> one_hot_encoding(const std::vector<in
 template<size_type batch_size, size_type output_features>
 float nll_loss(
   const Tensor<float, batch_size, output_features>& input,
-  const Tensor<float, output_features, batch_size>& one_hot_labels
+  const Tensor<float, output_features, batch_size>& one_hot_targets
 ){
-  float loss = -trace(matmul(one_hot_labels, input));
+  float loss = -trace(matmul(one_hot_targets, input));
   return loss;
 }
 
 template<size_type batch_size, size_type output_features>
 Tensor<float, batch_size, output_features> nll_loss_gradient(
   const Tensor<float, batch_size, output_features>& input,
-  const Tensor<float, output_features, batch_size>& one_hot_labels
+  const Tensor<float, output_features, batch_size>& one_hot_targets
 ){
-  return -transpose(one_hot_labels) + transpose(softmax(input));
+  return -transpose(one_hot_targets) + transpose(softmax(input));
 }
 
 //A class implementing the NLLLoss forward and backward method.
@@ -37,9 +37,9 @@ class NLLLoss{
     template<size_type batch_size, size_type output_features>
     float forward(
       const Tensor<float, batch_size, output_features> &input,
-      const Tensor<float, output_features, batch_size>& one_hot_labels
+      const Tensor<float, output_features, batch_size>& one_hot_targets
     ){
-      return nll_loss(input, one_hot_labels);
+      return nll_loss(input, one_hot_targets);
     }
   
     //backward method
@@ -47,9 +47,9 @@ class NLLLoss{
     Tensor<float, batch_size, input_features> backward(
       const Tensor<float, batch_size, output_features> &gradient,
       const Tensor<float, batch_size, input_features>& input,
-      const Tensor<float, output_features, batch_size>& one_hot_labels
+      const Tensor<float, output_features, batch_size>& one_hot_targets
     ){
-      return nll_loss_gradient(input, one_hot_labels) * gradient;
+      return nll_loss_gradient(input, one_hot_targets) * gradient;
     }
 };
 

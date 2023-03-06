@@ -7,35 +7,46 @@
 
 #include "tensor_algebra.h"
 #include "activation_functions.h"
+#include "optimizers.h"
 
 template<size_type input_features, size_type output_features>
 struct Parameters{
-  Tensor<float, input_features, output_features> weight;
-  Tensor<float, input_features, output_features> weight_gradient;
-  Tensor<float, output_features> bias;
-  Tensor<float, output_features> bias_gradient;
+    Tensor<float, input_features, output_features> weight;
+    Tensor<float, input_features, output_features> weight_gradient;
+    Tensor<float, output_features> bias;
+    Tensor<float, output_features> bias_gradient;
+    std::unique_ptr<Optimizer> optimizer;
 
-  void initialize(const std::string& initializer){
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::normal_distribution<float> distribution;
-    if(initializer == "he"){
-      distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features));
-    }
-    else if(initializer == "xavier"){
-      distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features + output_features));
-    }
-    else{
-      std::cout << "Initializer not implemented" << std::endl;
-    }
+    void initialize(float learning_rate, const std::string& initializer){
+      learning_rate_ = learning_rate;
+      std::random_device rd;
+      std::mt19937 generator(rd());
+      std::normal_distribution<float> distribution;
+      if(initializer == "he"){
+        distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features));
+      }
+      else if(initializer == "xavier"){
+        distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features + output_features));
+      }
+      else{
+        std::cout << "Initializer not implemented" << std::endl;
+      }
 
-    bias = 0.0;
-    for(auto i = 0; i < input_features; ++i){
-      for(auto j = 0; j < output_features; ++j){
-        weight(i, j) = distribution(generator);
+      bias = 0.0;
+      for(auto i = 0; i < input_features; ++i){
+        for(auto j = 0; j < output_features; ++j){
+          weight(i, j) = distribution(generator);
+        }
       }
     }
-  }
+
+    void update(){
+      optimizer = std::make_unique<SGD>(learning_rate_);
+      optimizer->update(*this);
+    }
+  
+  private:
+    float learning_rate_;
 };
 
 //Linear layer class
@@ -44,8 +55,8 @@ template<size_type input_features, size_type output_features>
 class Linear{
   public:
 
-    Linear(const std::string& initializer = "he"){
-      parameters.initialize(initializer);
+    Linear(float learning_rate, const std::string& initializer = "he"){
+      parameters.initialize(learning_rate, initializer);
     }
 
     //forward method
@@ -77,6 +88,26 @@ class Linear{
   private:
     Parameters<input_features, output_features> parameters;
 };
+
+class Optimizer{
+  public:
+    virtual void update(Parameters& parameters) = 0;
+    virtual ~Optimizer() = default;
+};
+
+class SGD : public Optimizer{
+  public:
+    SGD(float learning_rate) : learning_rate_(learning_rate) {}
+    
+    void update(Parameters& parameters) override {
+      parameters.weight -= learning_rate_ * parameters.weight_gradient;
+      parameters.bias -= learning_rate_ * parameters.bias_gradient;
+    }
+
+private:
+  float learning_rate_;
+};
+
 
 //ReLU layer 
 template<size_type batch_size, size_type output_features>
