@@ -24,13 +24,14 @@ std::pair<std::vector<std::vector<float>>, std::vector<int>> read(const std::str
     std::istringstream iss(line);
     std::string field;
     std::getline(iss, field, ','); // Extract label from first field
-    targets.push_back(std::stoi(field));
+    targets.emplace_back(std::stoi(field));
     while (std::getline(iss, field, ',')) { // Extract image data from remaining fields
-      image.push_back(std::stof(field));
+      image.emplace_back(std::stof(field));
     }
-    features.push_back(image);
+    features.emplace_back(std::move(image));
   }
   file.close();
-  return std::make_pair(features, targets);
+  return std::make_pair(std::move(features), std::move(targets));
 }
+
 #endif

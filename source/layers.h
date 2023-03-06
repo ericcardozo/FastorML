@@ -63,7 +63,7 @@ class Linear{
     ){
       parameters.weight_gradient = matmul(transpose(input), gradient);
       parameters.bias_gradient = 0.0; // Initialize bias_gradient with zeros
-
+      
       for (size_t i = 0; i < batch_size; i++) {
         for (size_t j = 0; j < output_features; j++){
         parameters.bias_gradient(j) += gradient(i, j);
@@ -90,7 +90,8 @@ class ReLU{
       output_ = relu(input);
       return output_;
     }
-  
+
+    
     //backward method
     template<size_type input_features>
     Tensor<float, batch_size, input_features> backward(
