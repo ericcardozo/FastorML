@@ -1,14 +1,15 @@
 #ifndef DATASET_H
 #define DATASET_H
 
+#include <iostream>
 
-template<size_type batch_size, size_type feature_size>
+template<std::size_t batch_size, std::size_t feature_size>
 class Dataset{
   public:
 
     struct Batch{
       Batch() = default;
-      Tensor<float, batch_size, feature_size> features;
+      Fastor::Tensor<float, batch_size, feature_size> features;
       std::vector<int> targets;
     };  
 
@@ -24,22 +25,18 @@ class Dataset{
     Dataset(
       const std::vector<std::vector<float>>& features,
       const std::vector<int>& targets,
-      bool shuffle = true,
       bool normalize = true
     ){
       for(auto i = 0; i < features.size()/batch_size; i++){
         Batch batch;
         for(auto j = 0; j < batch_size; j++){
-          batch.features(j,all) = Tensor<float,feature_size>(features[i * batch_size + j]);
+          batch.features(j,all) = Fastor::Tensor<float,feature_size>(features[i * batch_size + j]);
           batch.targets.push_back(targets[i * batch_size + j]);
         }
         if(normalize){//fix this later with a proper normalizer function.
           batch.features /= 255;
         }
         dataset_.emplace_back(std::move(batch));
-      }
-      if(shuffle){
-        shuffle();
       }
     }
 

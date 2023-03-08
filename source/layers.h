@@ -3,119 +3,65 @@
 
 #include <iostream>
 #include <random>
-
-
-#include "tensor_algebra.h"
+#include <Fastor/Fastor.h>
 #include "activation_functions.h"
 #include "optimizers.h"
-
-template<size_type input_features, size_type output_features>
-struct Parameters{
-    Tensor<float, input_features, output_features> weight;
-    Tensor<float, input_features, output_features> weight_gradient;
-    Tensor<float, output_features> bias;
-    Tensor<float, output_features> bias_gradient;
-    std::unique_ptr<Optimizer> optimizer;
-
-    void initialize(float learning_rate, const std::string& initializer){
-      learning_rate_ = learning_rate;
-      std::random_device rd;
-      std::mt19937 generator(rd());
-      std::normal_distribution<float> distribution;
-      if(initializer == "he"){
-        distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features));
-      }
-      else if(initializer == "xavier"){
-        distribution = std::normal_distribution<float>(0, std::sqrt(2.0 / input_features + output_features));
-      }
-      else{
-        std::cout << "Initializer not implemented" << std::endl;
-      }
-
-      bias = 0.0;
-      for(auto i = 0; i < input_features; ++i){
-        for(auto j = 0; j < output_features; ++j){
-          weight(i, j) = distribution(generator);
-        }
-      }
-    }
-
-    void update(){
-      optimizer = std::make_unique<SGD>(learning_rate_);
-      optimizer->update(*this);
-    }
-  
-  private:
-    float learning_rate_;
-};
+#include "parameters.h"
 
 //Linear layer class
 
-template<size_type input_features, size_type output_features>
+template<std::size_t input_features, std::size_t output_features>
 class Linear{
   public:
 
-    Linear(float learning_rate, const std::string& initializer = "he"){
-      parameters.initialize(learning_rate, initializer);
-    }
+    Linear(const std::string& initializer = "he")
+      : parameters(initializer){}
 
+    void set_optimizer(std::unique_ptr<Optimizer<input_features, output_features>> optimizer){
+      parameters.optimizer = std::move(optimizer);
+    }
+    
     //forward method
-    template<size_type batch_size>
-    Tensor<float, batch_size, output_features> forward(const Tensor<float, batch_size, input_features> &input){
-      Tensor<float,batch_size> ones(1);
+    template<std::size_t batch_size>
+    Fastor::Tensor<float, batch_size, output_features> forward(const Fastor::Tensor<float, batch_size, input_features> &input){
+      Fastor::Tensor<float,batch_size> ones(1);
       return matmul(input, parameters.weight) + outer(ones, parameters.bias); 
     }
   
     //backward method
-    template<size_type batch_size>
-    Tensor<float, batch_size, input_features> backward(
-      const Tensor<float, batch_size, output_features> &gradient,
-      const Tensor<float, batch_size, input_features>& input
+    template<std::size_t batch_size>
+    Fastor::Tensor<float, batch_size, input_features> backward(
+      const Fastor::Tensor<float, batch_size, output_features> &gradient,
+      const Fastor::Tensor<float, batch_size, input_features>& input
     ){
       parameters.weight_gradient = matmul(transpose(input), gradient);
       parameters.bias_gradient = 0.0; // Initialize bias_gradient with zeros
       
-      for (size_t i = 0; i < batch_size; i++) {
-        for (size_t j = 0; j < output_features; j++){
-        parameters.bias_gradient(j) += gradient(i, j);
+      for (auto i = 0; i < batch_size; i++) {
+        for (auto j = 0; j < output_features; j++){
+          parameters.bias_gradient(j) += gradient(i, j);
         }
       }
+      return matmul(gradient, transpose(parameters.weight));
+    }
 
-      Tensor<float, batch_size, input_features> input_gradient = matmul(gradient, transpose(parameters.weight));
-      return input_gradient;
+    void update(){
+      parameters.update();
     }
   
   private:
+
     Parameters<input_features, output_features> parameters;
-};
-
-class Optimizer{
-  public:
-    virtual void update(Parameters& parameters) = 0;
-    virtual ~Optimizer() = default;
-};
-
-class SGD : public Optimizer{
-  public:
-    SGD(float learning_rate) : learning_rate_(learning_rate) {}
-    
-    void update(Parameters& parameters) override {
-      parameters.weight -= learning_rate_ * parameters.weight_gradient;
-      parameters.bias -= learning_rate_ * parameters.bias_gradient;
-    }
-
-private:
-  float learning_rate_;
 };
 
 
 //ReLU layer 
-template<size_type batch_size, size_type output_features>
+template<std::size_t batch_size, std::size_t output_features>
 class ReLU{
   public:
     //forward method
-    Tensor<float, batch_size, output_features> forward(
-      const Tensor<float, batch_size, output_features> &input
+    Fastor::Tensor<float, batch_size, output_features> forward(
+      const Fastor::Tensor<float, batch_size, output_features>& input
     ){
       input_ = input;
       output_ = relu(input);
@@ -124,29 +70,30 @@ class ReLU{
 
     
     //backward method
-    template<size_type input_features>
-    Tensor<float, batch_size, input_features> backward(
-      const Tensor<float, batch_size, output_features> &gradient,
-      const Tensor<float, batch_size, input_features>& input
+    template<std::size_t input_features>
+    Fastor::Tensor<float, batch_size, input_features> backward(
+      const Fastor::Tensor<float, batch_size, output_features> &gradient,
+      const Fastor::Tensor<float, batch_size, input_features>& input
     ){
       return gradient * relu_gradient(input);
     }
 
-    Tensor<float, batch_size, output_features> input() const {return input_;};
-    Tensor<float, batch_size, output_features> output() const {return output_;};
+    Fastor::Tensor<float, batch_size, output_features> input() const {return input_;};
+    Fastor::Tensor<float, batch_size, output_features> output() const {return output_;};
 
   private:
-    Tensor<float, batch_size, output_features> input_;
-    Tensor<float, batch_size, output_features> output_;    
+
+    Fastor::Tensor<float, batch_size, output_features> input_;
+    Fastor::Tensor<float, batch_size, output_features> output_;    
 };
 
 
-template<size_type batch_size, size_type output_features>
+template<std::size_t batch_size, std::size_t output_features>
 class LogSoftMax{
   public:
     //forward method
-    Tensor<float, batch_size, output_features> forward(
-      const Tensor<float, batch_size, output_features> &input
+    Fastor::Tensor<float, batch_size, output_features> forward(
+      const Fastor::Tensor<float, batch_size, output_features> &input
     ){
       input_ = input;
       output_ = log_softmax(input); 
@@ -154,20 +101,20 @@ class LogSoftMax{
     }
   
     //backward method
-    template<size_type input_features>
-    Tensor<float, batch_size, input_features> backward(
-      const Tensor<float, batch_size, output_features> &gradient,
-      const Tensor<float, batch_size, input_features>& input
+    template<std::size_t input_features>
+    Fastor::Tensor<float, batch_size, input_features> backward(
+      const Fastor::Tensor<float, batch_size, output_features> &gradient,
+      const Fastor::Tensor<float, batch_size, input_features>& input
     ){
       return log_softmax_gradient(input) * gradient;
     }
   
-    Tensor<float, batch_size, output_features> input() const {return input_;};
-    Tensor<float, batch_size, output_features> output() const {return output_;};
+    Fastor::Tensor<float, batch_size, output_features> input() const {return input_;};
+    Fastor::Tensor<float, batch_size, output_features> output() const {return output_;};
 
   private:
-    Tensor<float, batch_size, output_features> input_;
-    Tensor<float, batch_size, output_features> output_;    
+    Fastor::Tensor<float, batch_size, output_features> input_;
+    Fastor::Tensor<float, batch_size, output_features> output_;    
 };
 
 #endif

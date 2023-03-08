@@ -3,22 +3,22 @@
 
 //ReLU activation function and its gradient
 
-template<size_type input_features, size_type output_features>
-Tensor<float, input_features, output_features> relu(const Tensor<float, input_features, output_features> &input){
+template<std::size_t input_features, std::size_t output_features>
+Fastor::Tensor<float, input_features, output_features> relu(const Fastor::Tensor<float, input_features, output_features> &input){
   return max(input, 0);
 }
 
-template<size_type input_features, size_type output_features>
-Tensor<float, input_features, output_features> relu_gradient(const Tensor<float, input_features, output_features> &input){
+template<std::size_t input_features, std::size_t output_features>
+Fastor::Tensor<float, input_features, output_features> relu_gradient(const Fastor::Tensor<float, input_features, output_features> &input){
   return input > 0;
 }
 
 //LogSoftmax activation function and its gradient
 
 
-template<size_type batch_size, size_type output_features>
-Tensor<float, batch_size, output_features> log_softmax(const Tensor<float, batch_size, output_features> &input){
-  Tensor<float, batch_size, output_features> output;
+template<std::size_t batch_size, std::size_t output_features>
+Fastor::Tensor<float, batch_size, output_features> log_softmax(const Fastor::Tensor<float, batch_size, output_features> &input){
+  Fastor::Tensor<float, batch_size, output_features> output;
   for(auto i = 0; i < batch_size; i++){
     auto max_value = max(input(i,all));
     auto shifted_values = input(i,all) - max_value;
@@ -29,9 +29,9 @@ Tensor<float, batch_size, output_features> log_softmax(const Tensor<float, batch
   return output;
 }
 
-template<size_type batch_size, size_type output_features>
-Tensor<float, batch_size, output_features> logsoftmax_gradient(const Tensor<float, batch_size, output_features> &input, const Tensor<float, batch_size, output_features> &grad_output){
-  Tensor<float, batch_size, output_features> output;
+template<std::size_t batch_size, std::size_t output_features>
+Fastor::Tensor<float, batch_size, output_features> logsoftmax_gradient(const Fastor::Tensor<float, batch_size, output_features> &input, const Fastor::Tensor<float, batch_size, output_features> &grad_output){
+  Fastor::Tensor<float, batch_size, output_features> output;
   for(auto i = 0; i < batch_size; i++){
     auto max_value = max(input(i,all));
     auto shifted_values = input(i,all) - max_value;
@@ -46,14 +46,14 @@ Tensor<float, batch_size, output_features> logsoftmax_gradient(const Tensor<floa
 
 // Softmax activation function and its gradient
 
-template<size_type batch_size, size_type output_features>
-Tensor<float, batch_size, output_features> softmax(const Tensor<float, batch_size, output_features> &input){
+template<std::size_t batch_size, std::size_t output_features>
+Fastor::Tensor<float, batch_size, output_features> softmax(const Fastor::Tensor<float, batch_size, output_features> &input){
   return exp(log_softmax(input));
 }
 
-template<size_type batch_size, size_type output_features>
-Tensor<float, batch_size, output_features> softmax_gradient(const Tensor<float, batch_size, output_features> &input, const Tensor<float, batch_size, output_features> &grad_output){
-  Tensor<float, batch_size, output_features> output;
+template<std::size_t batch_size, std::size_t output_features>
+Fastor::Tensor<float, batch_size, output_features> softmax_gradient(const Fastor::Tensor<float, batch_size, output_features> &input, const Fastor::Tensor<float, batch_size, output_features> &grad_output){
+  Fastor::Tensor<float, batch_size, output_features> output;
   for(auto i = 0; i < batch_size; i++){
     auto max_value = max(input(i,all));
     auto shifted_values = input(i,all) - max_value;
