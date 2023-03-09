@@ -35,7 +35,7 @@ class Linear{
       const Fastor::Tensor<float, batch_size, input_features>& input
     ){
       parameters.weight_gradient = matmul(transpose(input), gradient);
-      parameters.bias_gradient = 0.0; // Initialize bias_gradient with zeros
+      parameters.bias_gradient.zeros(); // Initialize bias_gradient with zeros
       
       for (auto i = 0; i < batch_size; i++) {
         for (auto j = 0; j < output_features; j++){
@@ -63,12 +63,9 @@ class ReLU{
     Fastor::Tensor<float, batch_size, output_features> forward(
       const Fastor::Tensor<float, batch_size, output_features>& input
     ){
-      input_ = input;
-      output_ = relu(input);
-      return output_;
+      return relu(input);
     }
 
-    
     //backward method
     template<std::size_t input_features>
     Fastor::Tensor<float, batch_size, input_features> backward(
@@ -77,14 +74,6 @@ class ReLU{
     ){
       return gradient * relu_gradient(input);
     }
-
-    Fastor::Tensor<float, batch_size, output_features> input() const {return input_;};
-    Fastor::Tensor<float, batch_size, output_features> output() const {return output_;};
-
-  private:
-
-    Fastor::Tensor<float, batch_size, output_features> input_;
-    Fastor::Tensor<float, batch_size, output_features> output_;    
 };
 
 
@@ -95,9 +84,7 @@ class LogSoftMax{
     Fastor::Tensor<float, batch_size, output_features> forward(
       const Fastor::Tensor<float, batch_size, output_features> &input
     ){
-      input_ = input;
-      output_ = log_softmax(input); 
-      return output_;
+      return logsoftmax(input);
     }
   
     //backward method
@@ -106,15 +93,8 @@ class LogSoftMax{
       const Fastor::Tensor<float, batch_size, output_features> &gradient,
       const Fastor::Tensor<float, batch_size, input_features>& input
     ){
-      return log_softmax_gradient(input) * gradient;
+      return logsoftmax_gradient(input, gradient) * gradient;
     }
-  
-    Fastor::Tensor<float, batch_size, output_features> input() const {return input_;};
-    Fastor::Tensor<float, batch_size, output_features> output() const {return output_;};
-
-  private:
-    Fastor::Tensor<float, batch_size, output_features> input_;
-    Fastor::Tensor<float, batch_size, output_features> output_;    
 };
 
 #endif
