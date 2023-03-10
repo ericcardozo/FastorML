@@ -39,12 +39,24 @@ class Dataset{
         dataset_.emplace_back(std::move(batch));
       }
     }
-
+    
     void shuffle(){
       std::random_device rd;
       std::mt19937 generator(rd());
-      std::shuffle(dataset_.begin(), dataset_.end(), generator);
-    }
+      for(auto& batch: dataset_){
+        std::vector<int> indices(batch_size);
+        std::iota(indices.begin(), indices.end(), 0);
+        std::shuffle(indices.begin(), indices.end(), generator);
+        Fastor::Tensor<float, batch_size, feature_size> shuffled_features;
+        std::vector<int> shuffled_targets;
+        for(auto i = 0; i < batch_size; i++){
+          shuffled_features(i, all) = batch.features(indices[i], all);
+          shuffled_targets.push_back(batch.targets[indices[i]]);
+      }
+      batch.features = shuffled_features;
+      batch.targets = shuffled_targets;
+  }
+}
 
   private:
     std::vector<Batch> dataset_;

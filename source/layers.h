@@ -66,11 +66,9 @@ class ReLU{
       return relu(input);
     }
 
-    //backward method
-    template<std::size_t input_features>
-    Fastor::Tensor<float, batch_size, input_features> backward(
+    Fastor::Tensor<float, batch_size, output_features> backward(
       const Fastor::Tensor<float, batch_size, output_features> &gradient,
-      const Fastor::Tensor<float, batch_size, input_features>& input
+      const Fastor::Tensor<float, batch_size, output_features>& input
     ){
       return gradient * relu_gradient(input);
     }
@@ -88,13 +86,14 @@ class LogSoftMax{
     }
   
     //backward method
-    template<std::size_t input_features>
-    Fastor::Tensor<float, batch_size, input_features> backward(
+    Fastor::Tensor<float, batch_size, output_features> backward(
       const Fastor::Tensor<float, batch_size, output_features> &gradient,
-      const Fastor::Tensor<float, batch_size, input_features>& input
-    ){
+      const Fastor::Tensor<float, batch_size, output_features>& input
+  ){
       return logsoftmax_gradient(input, gradient) * gradient;
     }
 };
+
+
 
 #endif

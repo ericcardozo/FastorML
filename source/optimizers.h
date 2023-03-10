@@ -21,10 +21,12 @@ class SGD : public Optimizer<input_features, output_features>{
     void update(Parameters<input_features, output_features>& parameters) override {
       parameters.weight -= learning_rate_ * parameters.weight_gradient;
       parameters.bias -= learning_rate_ * parameters.bias_gradient;
-    }
 
-private:
-  float learning_rate_;
+      parameters.weight_gradient.zeros();
+      parameters.bias_gradient.zeros();
+    }
+  private:
+    float learning_rate_;
 };
 
 #endif
