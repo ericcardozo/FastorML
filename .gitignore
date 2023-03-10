@@ -34,3 +34,7 @@
 # Data Files
 
 *.csv
+
+# Ide
+
+*.vscode
