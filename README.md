@@ -8,6 +8,7 @@ The test.cpp file have an already working implementation of a simple neural net 
 https://www.kaggle.com/competitions/digit-recognizer/data
 
 To do list:
+(short term)
 
 * Add SoftMax, Sigmoid, Tanh, ... Activation functions. 
 * Add CrossEntropyLoss, MSELoss, ... Loss functions.
@@ -17,3 +18,8 @@ To do list:
 * Optimize code making inplace versions of activation functions.
 * Creating a base class for layers. 
 * Creating a Neural Network base class.
+
+(long term)
+
+* Add support for convolutional layers
+* Add support for transformers
