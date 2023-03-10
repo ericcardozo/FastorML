@@ -16,4 +16,4 @@ To do list:
 * Optimize the shuffle method in the batches of the dataset class.
 * Optimize code making inplace versions of activation functions.
 * Creating a base class for layers. 
-* Creating a base class for Neural Network.
+* Creating a Neural Network base class.
